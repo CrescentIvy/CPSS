@@ -1,36 +1,23 @@
+# -*- coding: utf-8 -*-
 """
-Created on Jan 11 2019
-Group activity label classification based on audio data.
-Using transformer structure (self-attention) without any fusion models.
-Experiment is based on 67 trauma cases, input samples is sentence-level data.
-@author: Yue Gu, Ruiyu Zhang, Xinwei Zhao
+Created on Sat Aug 31 15:19:11 2019
+
+@author: NIZI
 """
 
 from __future__ import print_function
 from keras import backend
 from keras.models import Model
-from keras.layers import LSTM
-from keras.layers import Dense
-from keras.layers import Input
-from keras.layers import Masking
-from keras.layers import Activation
-from keras.layers import concatenate
-from keras.layers import BatchNormalization
-from keras.layers import Dropout
-from keras.layers import Lambda
-from keras.layers import GlobalAveragePooling1D
-from keras.layers import GlobalMaxPooling1D
+from keras.layers import LSTM, Dense, Input, Masking, Activation, concatenate, BatchNormalization
+from keras.layers import Dropout, Lambda, GlobalMaxPooling1D
 from keras.optimizers import Adam
-#from data_preprocessing import data
-from attention_model import AttentionLayer
+from attention_model import AttentionLayer, Self_Attention
 from transformer import Attention, Position_Embedding
 import numpy as np
 from tensorflow.python import debug as tf_debug
-#<meta charset="utf-8">
 
 # Parameter setting
-data_path = 'C:\\Users\\NIZI\\Documents\\a.KUKU\\UESTC\\CPSS\\1\\MELD\\MELD.Raw\\data\\'
-#saving_path = r'E:/Yue/Entire Data/CNMC/'
+data_path = '../data/'
 
 def weight_expand(x):
     return backend.expand_dims(x)
@@ -57,38 +44,6 @@ batch_size = 8
 head_num = 8
 head_size = 16
 
-#audio_input = Input(shape=(1200,92))
-#audio = Masking(mask_value=0.)(audio_input)
-#audio = Position_Embedding()(audio_input)
-#audio = LSTM(1024,
-#             return_sequences=True,
-#             recurrent_dropout=0.25,
-#             name='LSTM_audio_1')(audio)
-#audio_vector = LSTM(256,
-#             return_sequences=True,
-#             recurrent_dropout=0.25,
-#             name='LSTM_audio_2')(audio)
-#audio_vector = GlobalMaxPooling1D()(audio_vector)
-#
-#d = Dense(32)(audio_vector)
-#d = BatchNormalization()(d)
-#d = Activation('relu')(d)
-#d = Dropout(0.5)(d)
-#d = Dense(16)(d)
-#d = BatchNormalization()(d)
-#d = Activation('relu')(d)
-#
-#audio_prediction = Dense(num_class, activation='softmax')(d)
-#print('prediction shape: ', audio_prediction.shape)
-#audio_model = Model(inputs=audio_input, outputs=audio_prediction)
-#
-## optimizer
-#adam = Adam(lr=0.00001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-#audio_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-#audio_model.summary()
-
-
-# Model Architecture
 # Audio feature vector
 audio_input = Input(shape=(1200, 92))
 #x = Masking(mask_value=0.)(audio_input)
@@ -97,22 +52,6 @@ x = Position_Embedding()(audio_input)
 x = Attention(head_num, head_size)([x, x, x])
 x = BatchNormalization()(x)
 x = Dropout(0.15)(x)
-#
-#x = Attention(head_num, head_size)([x, x, x])
-#x = BatchNormalization()(x)
-#x = Dropout(0.15)(x)
-#
-#x = Attention(head_num, head_size)([x, x, x])
-#x = BatchNormalization()(x)
-#x = Dropout(0.15)(x)
-#
-#x = Attention(head_num, head_size)([x, x, x])
-#x = BatchNormalization()(x)
-#x = Dropout(0.15)(x)
-#
-#x = Attention(head_num, head_size)([x, x, x])
-#x = BatchNormalization()(x)
-#x = Dropout(0.15)(x)
 
 x = Attention(head_num, head_size)([x, x, x])
 x = BatchNormalization()(x)
@@ -129,12 +68,8 @@ d = Dropout(0.5)(d)
 d = Dense(16)(d)
 d = BatchNormalization()(d)
 d = Activation('relu')(d)
-d = Dropout(0.5)(d)
-d = Dense(8)(d)
-d = BatchNormalization()(d)
-d = Activation('relu')(d)
-d = Dropout(0.5)(d)
-#d = Dense(16)(d)
+#d = Dropout(0.5)(d)
+#d = Dense(8)(d)
 #d = BatchNormalization()(d)
 #d = Activation('relu')(d)
 prediction = Dense(num_class, activation='softmax')(d)
@@ -148,8 +83,7 @@ audio_model.summary()
 
 if __name__ == "__main__":
     # Audio model training
-#    audio_acc = 0
-    # data loader (balance data)
+    # data loader
     train_label, train_audio, test_label, test_audio = get_data(data_path)
 #    print('train_label shape: ', train_label.shape)
 #    print('train_text shape: ', train_text.shape)
@@ -175,11 +109,3 @@ if __name__ == "__main__":
         print('epoch: ', str(i))
         print('loss_a', loss_a, ' ', 'acc_a', acc_a)
         print('acc_a ', acc_a)
-#        gakki.write_epoch_acc(i, acc_a, name='Audio')
-#        if acc_a >= audio_acc:
-#            audio_acc = acc_a
-        """
-        if i >= 0:
-        audio_model.save_weights(saving_path + 'audio_transformer_weights.h5')
-        """
-#    print('final_acc: ', audio_acc)
