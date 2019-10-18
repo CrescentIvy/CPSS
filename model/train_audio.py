@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Aug 31 15:19:11 2019
+Created on Fri Sep 27 13:22:32 2019
 
 @author: NIZI
 """
@@ -8,16 +8,19 @@ Created on Sat Aug 31 15:19:11 2019
 from __future__ import print_function
 from keras import backend
 from keras.models import Model
-from keras.layers import LSTM, Dense, Input, Masking, Activation, concatenate, BatchNormalization
-from keras.layers import Dropout, Lambda, GlobalMaxPooling1D
+from keras.layers import Dense, Dropout, Input, LSTM
+from keras.layers import Bidirectional, Masking, Embedding, concatenate
+from keras.layers import BatchNormalization, Activation, TimeDistributed
+from keras.layers import Conv1D, GlobalMaxPooling1D, Lambda
 from keras.optimizers import Adam
-from attention_model import AttentionLayer, Self_Attention
+#from attention_model import AttentionLayer
 from transformer import Attention, Position_Embedding
 import numpy as np
 from tensorflow.python import debug as tf_debug
+#<meta charset="utf-8">
 
 # Parameter setting
-data_path = '../data/'
+data_path = 'C:\\Users\\NIZI\\Documents\\a.KUKU\\UESTC\\CPSS\\1\\MELD\\MELD.Raw\\data\\'
 
 def weight_expand(x):
     return backend.expand_dims(x)
@@ -44,14 +47,32 @@ batch_size = 8
 head_num = 8
 head_size = 16
 
+# Model Architecture
 # Audio feature vector
-audio_input = Input(shape=(1200, 92))
+x = Input(shape=(1200, 92))
+print(x.shape)
 #x = Masking(mask_value=0.)(audio_input)
-x = Position_Embedding()(audio_input)
+#x = Position_Embedding()(audio_input)
 
 x = Attention(head_num, head_size)([x, x, x])
 x = BatchNormalization()(x)
 x = Dropout(0.15)(x)
+#
+#x = Attention(head_num, head_size)([x, x, x])
+#x = BatchNormalization()(x)
+#x = Dropout(0.15)(x)
+#
+#x = Attention(head_num, head_size)([x, x, x])
+#x = BatchNormalization()(x)
+#x = Dropout(0.15)(x)
+#
+#x = Attention(head_num, head_size)([x, x, x])
+#x = BatchNormalization()(x)
+#x = Dropout(0.15)(x)
+#
+#x = Attention(head_num, head_size)([x, x, x])
+#x = BatchNormalization()(x)
+#x = Dropout(0.15)(x)
 
 x = Attention(head_num, head_size)([x, x, x])
 x = BatchNormalization()(x)
@@ -68,8 +89,12 @@ d = Dropout(0.5)(d)
 d = Dense(16)(d)
 d = BatchNormalization()(d)
 d = Activation('relu')(d)
-#d = Dropout(0.5)(d)
+d = Dropout(0.5)(d)
 #d = Dense(8)(d)
+#d = BatchNormalization()(d)
+#d = Activation('relu')(d)
+#d = Dropout(0.5)(d)
+#d = Dense(16)(d)
 #d = BatchNormalization()(d)
 #d = Activation('relu')(d)
 prediction = Dense(num_class, activation='softmax')(d)
@@ -92,20 +117,15 @@ if __name__ == "__main__":
 #    print('test_text shape: ', test_text.shape)
 #    print('test_audio shape: ', test_audio.shape)
     
-    for i in range(epoch):
-        
-        print('audio branch, epoch: ', str(i))
-        audio_model.fit(train_audio,
-                        train_label,
-                        batch_size=batch_size,
-                        epochs=1,
-                        verbose=1)
+    audio_model.fit(train_audio,
+                    train_label,
+                    batch_size=batch_size,
+                    epochs=1,
+                    verbose=1)
 
-        loss_a, acc_a = audio_model.evaluate(test_audio,
-                                             test_label,
-                                             batch_size=batch_size,
-                                             verbose=0)
+    loss_a, acc_a = audio_model.evaluate(test_audio,
+                                         test_label,
+                                         batch_size=batch_size,
+                                         verbose=0)
 
-        print('epoch: ', str(i))
-        print('loss_a', loss_a, ' ', 'acc_a', acc_a)
-        print('acc_a ', acc_a)
+    print('loss_a', loss_a, ' ', 'acc_a', acc_a)

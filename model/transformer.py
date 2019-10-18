@@ -6,7 +6,7 @@ from keras.engine.topology import Layer
 class Position_Embedding(Layer):
 
     def __init__(self, size=None, mode='sum', **kwargs):
-        self.size = size  # 必须为偶数
+        self.size = size
         self.mode = mode
         super(Position_Embedding, self).__init__(**kwargs)
 
