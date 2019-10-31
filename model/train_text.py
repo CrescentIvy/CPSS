@@ -71,7 +71,7 @@ def pretrained_embedding_layer(word_to_vec_map, source_vocab_to_int):
     
     embedding_layer.set_weights([emb_matrix])
     
-    return embedding_layer
+    return emb_matrix, embedding_layer
 
 with open(data_path + 'vectors.txt', 'r') as f:
     words = set()
@@ -87,10 +87,10 @@ train_vocab_to_int = _train_vocab_to_int.item()
 vocab_len = len(train_vocab_to_int) + 1
 emb_dim = word_to_vec_map['you'].shape[0]
 #print(len(train_vocab_to_int))
-#embedding_layer = pretrained_embedding_layer(word_to_vec_map, train_vocab_to_int)
+emb_matrix, embedding_layer = pretrained_embedding_layer(word_to_vec_map, train_vocab_to_int)
 
 num_class = 7
-epoch = 20
+epoch = 80
 batch_size = 16
 head_num = 8
 head_size = 16
@@ -99,7 +99,7 @@ phase_1_trainable = False
 # input and its shape
 text_input = Input(shape = (40,), name = 'ph1_input')
 # word embedding
-text = Embedding(vocab_len, emb_dim, trainable = False)(text_input)
+text = Embedding(vocab_len, emb_dim, weights = [emb_matrix])(text_input)
 #em_text = embedding_layer(text_input)
 #em_text = Embedding(input_dim = 1470, 
 #                    output_dim = 200, 
@@ -107,33 +107,45 @@ text = Embedding(vocab_len, emb_dim, trainable = False)(text_input)
 #                    trainable = True)(text_input)
 # masking layer
 text = Masking(mask_value = 0., name = 'ph1_mask')(text)
+#print(text.shape)  
 # LSTM layer
-#text = LSTM(512,
-#            return_sequences = True,
-#            recurrent_dropout = 0.25,
-#            name = 'ph1_LSTM_text_1')(text)
-#text = LSTM(200,
-#            return_sequences = True,
+text_weight = LSTM(512,
+            return_sequences = True, 
+            recurrent_dropout = 0.25,
+            name = 'ph1_LSTM_text_1')(text)
+#text_weight = LSTM(256,
+#            return_sequenc es = True,
 #            recurrent_dropout = 0.25, 
-#            name = 'ph1_LSTM_text_2')(text)
-#text = LSTM(128,
+#            name = 'ph1_LSTM_text_2')(text_weight)
+#text_weight = LSTM(128,
+#            return_sequences = True,
 #            recurrent_dropout = 0.25,
-#            name = 'ph1_LSTM_text_3')(text)
+#            name = 'ph1_LSTM_text_3')(text_weight)
 # attention layer
 #text_weight = Attention(head_num, head_size)([text, text, text])
 #text_weight = AttentionLayer(name = 'ph1_att')(text)
-text_weight = Self_Attention(emb_dim, name = 'ph1_att')(text)
+text_weight = Self_Attention(emb_dim)(text_weight)
 # batch normalization
-text_weight = BatchNormalization(name = 'batch_1')(text_weight)
+text_weight = BatchNormalization()(text_weight)
 # feed Forward
 text_weight = Dropout(0.5)(text_weight)
 # batch normalization
-text_weight = BatchNormalization(name = 'batch_2')(text_weight)
+text_weight = BatchNormalization()(text_weight)
 
-text_weight = Self_Attention(emb_dim, name = 'ph2_att')(text_weight)
-text_weight = BatchNormalization(name = 'batch_3')(text_weight)
-text_weight = Dropout(0.5)(text_weight)
-text_weight = BatchNormalization(name = 'batch_4')(text_weight)
+#text_weight = Self_Attention(emb_dim)(text_weight)
+#text_weight = BatchNormalization()(text_weight)
+#text_weight = Dropout(0.5)(text_weight)
+#text_weight = BatchNormalization()(text_weight)
+
+#text_weight = Self_Attention(emb_dim)(text_weight)
+#text_weight = BatchNormalization()(text_weight)
+#text_weight = Dropout(0.5)(text_weight)
+#text_weight = BatchNormalization()(text_weight)
+#
+#text_weight = Self_Attention(emb_dim)(text_weight)
+#text_weight = BatchNormalization()(text_weight)
+#text_weight = Dropout(0.5)(text_weight)
+#text_weight = BatchNormalization()(text_weight)
 
 #text_weight = Lambda(weight_expand, name = 'ph1_lam1')(text_weight)
 text_vector = Lambda(weight_dot, name = 'ph1_lam2')([text, text_weight])
@@ -192,4 +204,6 @@ if __name__ == "__main__":
                                          verbose=1)
 
     history.loss_plot('epoch')
+    with open(data_path + 'result.txt','w') as f:
+        f.write(str(text_model.history))
     
